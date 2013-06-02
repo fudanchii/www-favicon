@@ -1,11 +1,11 @@
 require 'rubygems'
 require 'open-uri'
 require 'net/https'
-require 'hpricot'
+require 'nokogiri'
 
 module WWW
   class Favicon
-    VERSION = '0.0.6'
+    VERSION = '0.0.7'
 
     def find(url)
       response = request(url)
@@ -33,9 +33,9 @@ module WWW
     private
 
     def find_from_link(html, url)
-      doc = Hpricot(html)
+      doc = Nokogiri::HTML(html)
 
-      doc.search('//link').each do |link|
+      doc.css('link').each do |link|
         if link[:rel] =~ /^(shortcut )?icon$/i
           favicon_url_or_path = link[:href]
 
