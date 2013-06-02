@@ -1,10 +1,10 @@
 require 'rubygems'
 require 'rake'
 require 'rake/clean'
-require 'spec/rake/spectask'
+require 'rspec/core/rake_task'
 require 'rake/packagetask'
-require 'rake/gempackagetask'
-require 'rake/rdoctask'
+require 'rubygems/package_task'
+require 'rdoc/task'
 require 'rake/contrib/sshpublisher'
 require 'fileutils'
 
@@ -34,10 +34,9 @@ RDOC_OPTS = [
 task :default => [:spec]
 task :package => [:clean]
 
-Spec::Rake::SpecTask.new do |t|
-  t.spec_opts = ['--options', "spec/spec.opts"]
-  t.spec_files = FileList['spec/*_spec.rb']
-  t.rcov = true
+RSpec::Core::RakeTask.new do |t|
+  t.rspec_opts = ['--options', "spec/spec.opts"]
+  t.pattern = ['spec/*_spec.rb']
 end
 
 spec = Gem::Specification.new do |s|
@@ -71,7 +70,7 @@ spec = Gem::Specification.new do |s|
 	s.extensions = FileList["ext/**/extconf.rb"].to_a
 end
 
-Rake::GemPackageTask.new(spec) do |p|
+Gem::PackageTask.new(spec) do |p|
 	p.need_tar = true
 	p.gem_spec = spec
 end
