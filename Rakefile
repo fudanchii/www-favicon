@@ -1,108 +1,36 @@
 require 'rubygems'
 require 'rake'
 require 'rake/clean'
+
 require 'rspec/core/rake_task'
-require 'rake/packagetask'
-require 'rubygems/package_task'
-require 'rdoc/task'
-require 'rake/contrib/sshpublisher'
-require 'fileutils'
 
 $LOAD_PATH << File.dirname(__FILE__) + '/lib/'
 require 'www/favicon'
 
-include FileUtils
+NAME = 'www-favicon'
+VERS = WWW::Favicon::VERSION
 
-NAME              = "www-favicon"
-AUTHOR            = "youpy"
-EMAIL             = "youpy@buycheapviagraonlinenow.com"
-DESCRIPTION       = "find favicon url"
-BIN_FILES         = %w(  )
-VERS              = WWW::Favicon::VERSION
-
-REV = File.read(".svn/entries")[/committed-rev="(d+)"/, 1] rescue nil
 CLEAN.include ['**/.*.sw?', '*.gem', '.config']
-RDOC_OPTS = [
-	'--title', "#{NAME} documentation",
-	"--charset", "utf-8",
-	"--opname", "index.html",
-	"--line-numbers",
-	"--main", "README.rdoc",
-	"--inline-source",
-]
 
 task :default => [:spec]
-task :package => [:clean]
 
 RSpec::Core::RakeTask.new do |t|
   t.rspec_opts = ['--options', "spec/spec.opts"]
   t.pattern = ['spec/*_spec.rb']
 end
 
-spec = Gem::Specification.new do |s|
-	s.name              = NAME
-	s.version           = VERS
-	s.platform          = Gem::Platform::RUBY
-	s.has_rdoc          = true
-	s.extra_rdoc_files  = ["README.rdoc", "ChangeLog"]
-	s.rdoc_options     += RDOC_OPTS + ['--exclude', '^(examples|extras)/']
-	s.summary           = DESCRIPTION
-	s.description       = DESCRIPTION
-	s.author            = AUTHOR
-	s.email             = EMAIL
-	s.executables       = BIN_FILES
-	s.bindir            = "bin"
-	s.require_path      = "lib"
-	s.autorequire       = ""
-	s.test_files        = Dir["test/test_*.rb"]
-
-	s.add_dependency('hpricot', '>= 0')
-	s.add_development_dependency(%q<rspec>, [">= 1.2.9"])
-	s.add_development_dependency(%q<fakeweb>, [">= 1.2.7"])
-	#s.required_ruby_version = '>= 1.8.2'
-
-	s.files = %w(README.rdoc ChangeLog Rakefile) +
-		Dir.glob("{bin,doc,test,lib,templates,generator,extras,website,script}/**/*") + 
-		Dir.glob("ext/**/*.{h,c,rb}") +
-		Dir.glob("examples/**/*.rb") +
-		Dir.glob("tools/*.rb")
-
-	s.extensions = FileList["ext/**/extconf.rb"].to_a
-end
-
-Gem::PackageTask.new(spec) do |p|
-	p.need_tar = true
-	p.gem_spec = spec
+task :build do
+  system "gem build #{NAME}.gemspec"
 end
 
 task :install do
-	name = "#{NAME}-#{VERS}.gem"
-	sh %{rake package}
-	sh %{sudo gem install pkg/#{name}}
+  name = "#{NAME}-#{VERS}.gem"
+  system "rake build"
+  system "sudo gem install #{name}"
 end
 
 task :uninstall => [:clean] do
-	sh %{sudo gem uninstall #{NAME}}
-end
-
-
-Rake::RDocTask.new do |rdoc|
-	rdoc.rdoc_dir = 'html'
-	rdoc.options += RDOC_OPTS
-	rdoc.template = "resh"
-	#rdoc.template = "#{ENV['template']}.rb" if ENV['template']
-	if ENV['DOC_FILES']
-		rdoc.rdoc_files.include(ENV['DOC_FILES'].split(/,\s*/))
-	else
-		rdoc.rdoc_files.include('README.rdoc', 'ChangeLog')
-		rdoc.rdoc_files.include('lib/**/*.rb')
-		rdoc.rdoc_files.include('ext/**/*.c')
-	end
-end
-
-desc 'Show information about the gem.'
-task :debug_gem do
-  puts spec.to_ruby
+  system "sudo gem uninstall #{NAME}"
 end
 
 desc 'Test against the provided URL'
