@@ -5,7 +5,7 @@ require 'nokogiri'
 
 module WWW
   class Favicon
-    VERSION = '0.0.7'
+    VERSION = '0.0.8'
 
     def find(url)
       response = request(url)
